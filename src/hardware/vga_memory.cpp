@@ -312,6 +312,9 @@ static inline Bitu VGA_Generic_Read_Handler(PhysPt planeaddr,PhysPt rawaddr,unsi
 	return 0;
 }
 
+static const uint32_t OddEvenImpliedMask[] = {le32toh(0x00FF00FF), le32toh(0xFF00FF00)};
+static const uint32_t Chain4ImpliedMask[] = {le32toh(0x000000FF), le32toh(0x0000FF00), le32toh(0x00FF0000), le32toh(0xFF000000)};
+
 template <const bool chained> static inline void VGA_Generic_Write_Handler(PhysPt planeaddr,PhysPt rawaddr,uint8_t val) {
 	const unsigned char hobit_n = ((vga.seq.memory_mode&2/*Extended Memory*/) || (vga_ignore_extended_memory_bit && IS_VGA_ARCH)) ? 16u : 14u;
 	uint32_t mask = vga.config.full_map_mask;
@@ -324,13 +327,13 @@ template <const bool chained> static inline void VGA_Generic_Write_Handler(PhysP
 	 * NTS: Real hardware experience says that despite the name, the Odd/Even bit affects reading as well */
 	if (chained) {
 		if (!(vga.seq.memory_mode&4) && !non_cga_ignore_oddeven_engage)/* Odd Even Host Memory Write Addressing Disable (is not set) */
-			mask &= 0xFF00FFu << ((rawaddr & 1u) * 8u);
+			mask &= OddEvenImpliedMask[rawaddr & 1u];
 		else
-			mask &= 0xFFu << ((rawaddr & 3u) * 8u);
+			mask &= Chain4ImpliedMask[rawaddr & 3u];
 	}
 	else {
 		if (!(vga.seq.memory_mode&4) && !non_cga_ignore_oddeven_engage)/* Odd Even Host Memory Write Addressing Disable (is not set) */
-			mask &= 0xFF00FFu << ((rawaddr & 1u) * 8u);
+			mask &= OddEvenImpliedMask[rawaddr & 1u];
 	}
 
 	/* Graphics Controller: Miscellaneous Graphics Register register (06h)
