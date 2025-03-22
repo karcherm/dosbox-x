@@ -106,6 +106,14 @@ static_assert( sizeof(FPU_Reg_32) == 4, "FPU_Reg_32 error" );
 #define FPU_Reg_32_exponent_bias	(127)
 static const uint32_t FPU_Reg_32_implied_bit = ((uint32_t)1UL << (uint32_t)23UL);
 
+template <typename Elem, size_t N>
+struct rev_array
+{
+    Elem _rev_data[N];
+    Elem& operator[](size_t idx) { return _rev_data[N - idx - 1]; }
+    const Elem& operator[](size_t idx) const { return _rev_data[N - idx - 1]; }
+};
+
 union alignas(8) MMX_reg {
 
 	uint64_t q;
@@ -173,7 +181,7 @@ union alignas(8) MMX_reg {
 	static_assert(sizeof(uw) == 8, "MMX packing error");
 
 	struct {
-		uint16_t w3,w2,w1,w0;
+		int16_t w3,w2,w1,w0;
 	} sw;
 	static_assert(sizeof(sw) == 8, "MMX packing error");
 
@@ -183,9 +191,13 @@ union alignas(8) MMX_reg {
 	static_assert(sizeof(ub) == 8, "MMX packing error");
 
 	struct {
-		uint8_t b7,b6,b5,b4,b3,b2,b1,b0;
+		int8_t b7,b6,b5,b4,b3,b2,b1,b0;
 	} sb;
 	static_assert(sizeof(sb) == 8, "MMX packing error");
+
+	rev_array<uint8_t,8> uba;
+	rev_array<uint16_t,4> uwa;
+	rev_array<uint32_t,2> uda;
 
 	struct { /* MMX registers can contain single precision float if the program uses AMD 3DNow! instructions */
 		FPU_Reg_32 f1,f0;
